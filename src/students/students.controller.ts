@@ -1,81 +1,37 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { CreateStudentDto, UpdateStudentDto } from './student.dto';
+import { StudentsService } from './students.service';
 
-interface Student {
-    id: string;
-    name: string;
-    email: string;
-}
+
 
 @Controller('students')
 export class StudentsController {
 
-    private students: Student[] = [
-        {
-            id: '1',
-            name: 'Franklin Jiménez',
-            email: 'frank@udenar.edu.co',
-        },
-        {
-            id: '2',
-            name: 'Juan Pérez',
-            email: 'juan@udenar.edu.co',
-        },
-        {
-            id: '3',
-            name: 'Pedro Gómez',
-            email: 'pedro@udenar.edu.co',
-        },
-    ];
+   constructor(private studentsService: StudentsService) {}
 
     @Get()
-    getStudents(): Student[] {
-        return this.students;
+    getStudents() {
+        return this.studentsService.findAll();
     }
 
     @Get(':id')
-    getStudent(@Param('id') id: string) {
-        const student = this.students.find((student) => student.id === id);
-        if(!student) {
-            return {'message': 'Student not found!!!'};
-        }
-        return student;
+    findStudent(@Param('id', ParseIntPipe) id: number){
+       return this.studentsService.getStudentById(id);
     }
 
     @Post()
-    createStudent(@Body() body: Student) {
-        const newStudent = {
-            ...body,
-            id: `student_${this.students.length + 1}`, 
-        }
-        this.students.push(newStudent);
-        return newStudent;
+    createStudent(@Body() body: CreateStudentDto){
+        return this.studentsService.create(body);
     }
-
+    
     @Delete(':id')
-    deleteStudent(@Param('id') id: string) {
-        const position = this.students.findIndex((student) => student.id === id);
-        if(position === -1) {
-            return {'message': 'Student not found!!!'};
-        }
-        this.students.splice(position, 1);
-        return {
-            'message': 'Student deleted successfully!!!'
-        };
-    }
+    deleteStudent(@Param('id', ParseIntPipe) id: number){
+        return this.studentsService.delete(id);
+    }   
 
     @Put(':id')
-    updateStudent(@Param('id') id: string, @Body() changes: Student) {
-        const position = this.students.findIndex((student) => student.id === id);
-        if(position === -1) {
-            return {'message': 'Student not found!!!'};
-        }
-        const currentData = this.students[position];
-        const updatedStudent = {
-            ...currentData,
-            ...changes,
-        }
-        this.students[position] = updatedStudent;
-        return updatedStudent;
+    updateStudent(@Param('id', ParseIntPipe) id: number, @Body() changes: UpdateStudentDto){
+        return this.studentsService.update(id, changes);
     }
 
    
